@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  tests:
+    build: ./tests
+    volumes:
+      - type: bind
+        source: .
+        target: /plugin
+        read_only: true

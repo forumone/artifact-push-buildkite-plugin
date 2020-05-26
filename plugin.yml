@@ -1,0 +1,53 @@
+name: Artifact Push
+description: Pushes build artifacts to a remote Git repository
+author: Forum One
+
+requirements: [git, jq, rsync]
+
+configuration:
+  additionalProperties: false
+  required:
+    - source-directory
+    - remote
+    - branches
+
+  properties:
+    source-directory: { type: string }
+    remote: { type: string }
+    message: { type: string }
+
+    require-branch: { type: boolean }
+    branches:
+      type: array
+      items:
+        type: [string, object]
+        additionalProperties: false
+        required: [match]
+        properties:
+          match: { type: string }
+          target: { type: string }
+          remote: { type: string }
+
+    files:
+      additionalProperties: false
+      properties:
+        force-add:
+          type: [array, string]
+          items:
+            type: string
+        ignore:
+          type: [array, string]
+          items:
+            type: string
+
+    git:
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        email: { type: string }
+
+    ssh:
+      additionalProperties: false
+      properties:
+        keyscan:
+          type: [string, object]

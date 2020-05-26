@@ -1,0 +1,276 @@
+#!/bin/bash
+
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# shellcheck source=lib/lib.bash
+. "$root/lib/lib.bash"
+
+# Check the value of $BUILDKITE_COMMAND_EXIT_STATUS - if it's not zero, that means
+# something ahead of us (the build or another plugin) failed, and it's not safe to perform
+# a deployment.
+# This value is set by the Buildkite agent as part of its post-command hook phase.
+# cf. https://github.com/buildkite/agent/blob/bed05dda2d7bfb888d80c621af827ee2bce39144/bootstrap/bootstrap.go#L1331-L1333
+status="${BUILDKITE_COMMAND_EXIT_STATUS:-0}"
+if test "$status" -ne 0; then
+  warn "The command phase of this build exited with exit code $status"
+  warn "Refusing to deploy due to failed build"
+
+  # Other plugins that skip on failed builds exit with 0, so we'll continue that practice
+  # here.
+  exit 0
+fi
+
+# Template for temporary files
+template="${TMPDIR:-/tmp}/$BUILDKITE_PIPELINE_SLUG-$BUILDKITE_BUILD_NUMBER.XXXXXXXX"
+
+# Set up the cleanup trap now in order to ensure things get destroyed even if we fail
+target_directory=
+known_hosts_file=
+
+cleanup() {
+  # Only remove files if we created them
+  if test -n "$target_directory"; then rm -rf "$target_directory"; fi
+  if test -n "$known_hosts_file"; then rm -rf "$known_hosts_file"; fi
+}
+
+trap cleanup EXIT
+
+header "Validating configuration"
+
+validate-config
+
+target_branch="$(get-branch-target)"
+target_remote="$(get-branch-remote)"
+
+# If there is no target branch, we can't proceed. This occurs here instead of in a
+# validation function because we exit in case a branch target is missing.
+if test -z "$target_branch"; then
+  # Warn the user if this issue is due to an empty configuration
+  if test "$(branch-config-count)" -eq 0; then
+    warn "No branch mappings have been defined."
+    warn "Remember to set the branches option in the plugin configuration."
+  fi
+
+  # Soft fail if a branch isn't required
+  if ! is-branch-required; then
+    echo "Branch $BUILDKITE_BRANCH has no deployment destination."
+    exit 0
+  fi
+
+  # Since a branch was required, let's dump the configuration and indicate what we know
+  # about the branch mappings
+  error "Failed to determine a branch to deploy to."
+  error
+  error "Current branch: $BUILDKITE_BRANCH"
+  error "Branch mappings:"
+  dump-branch-config | while read -r line; do
+    error "  * $line"
+  done
+
+  exit 1
+fi
+
+# Build the two file lists
+files_ignore=()
+files_force_add=()
+
+index=0
+while true; do
+  file="$(get-config files ignore $index)"
+  if test -z "$file"; then
+    break
+  fi
+
+  files_ignore+=("$file")
+  index=$((index + 1))
+done
+
+index=0
+while true; do
+  file="$(get-config files force-add $index)"
+  if test -z "$file"; then
+    break
+  fi
+
+  files_force_add+=("$file")
+  index=$((index + 1))
+done
+
+header "Deploying to ${target_branch@Q} on remote ${target_remote@Q}..."
+
+# If the user requested an ssh-keyscan, then we perform that and save the new host keys to
+# a temporary file.
+if test -n "$(ssh-keyscan-host)"; then
+  known_hosts_file="$(mktemp "$template")"
+  ssh-perform-keyscan "$known_hosts_file"
+fi
+
+# Create a temporary directory
+target_directory="$(mktemp -d "$template")"
+
+# If we were asked to perform a keyscan, then save an ssh command that we should provide
+# to Git when cloning/pushing. Remember to use subshells when passing the ssh_command to
+# Git because we don't want to interfere with Buildkite.
+ssh_command=
+if test -n "$known_hosts_file"; then
+  ssh_command="ssh -o UserKnownHostsFile=$known_hosts_file"
+fi
+
+(
+  echo "--- :git: Cloning $target_remote..."
+  if test -n "$ssh_command"; then
+    GIT_SSH_COMMAND="$ssh_command"
+    export GIT_SSH_COMMAND
+  fi
+
+  git clone \
+    --branch "$target_branch" \
+    --depth 1 \
+    --single-branch \
+    "$target_remote" \
+    "$target_directory"
+)
+
+rsync_args=(
+  # Attempt to preserve as much information and metadata
+  --archive
+
+  # Don't optimize based on file size/modification time
+  --ignore-times
+
+  # Request deletion of files that don't appear in our source directory.
+  --delete
+
+  # Ask rsync to wait to delete files until the transfer is complete.
+  --delete-delay
+
+  # Since git doesn't care about empty directories, ask rsync to avoid creating them
+  --prune-empty-dirs
+
+  # Passing the human-readable option twice means that rsync will output sizes with a few
+  # decimal points and use SI prefixes (e.g., 1234567 bytes is output as 1.23M).
+  --human-readable
+  --human-readable
+
+  # Standard output settings
+  --info stats1
+  --info progress2
+)
+
+# If we're running in verbose mode, ask rsync to print more file-by-file information
+if is-verbose; then
+  rsync_args+=(
+    --info copy1
+    --info del1
+    --info name2
+    --info skip1
+  )
+fi
+
+# Set up global ignore rules. We ignore the .git directory unconditionally: modifying this
+# will result in a divergent history that will be rejected by the remote's git server.
+rsync_args+=(
+  --filter "exclude .git"
+)
+
+# For each file to ignore, add an rsync exclude rule.
+for file in ${files_ignore[@]+"${files_ignore[@]}"}; do
+  rsync_args+=(--filter "exclude $file")
+done
+
+# The "&& pwd" at the end lets us wind up with a more normalized path (e.g. /foo/. => /foo)
+source_directory="$(cd "$PWD/$(get-config source-directory)" && pwd)"
+
+verbose "rsync"
+verbose "  source: $source_directory"
+verbose "  target: $target_directory"
+
+rsync "${rsync_args[@]}" "$source_directory/" "$target_directory/"
+
+# Add changed files. The -C "$dir" option is used to tell Git which directory to look in,
+# instead of attempting to find where .git is relative to $PWD. This lets us avoid
+# performing a cd and potentially changing what other plugins think is the current
+# directory.
+git -C "$target_directory" add .
+
+# Obey the force-add list
+for file in ${files_force_add[@]:+"${files_force_add[@]}"}; do
+  git -C "$target_directory" add -f "$file"
+done
+
+# Perform some last minute checks to ensure that there is actually content staged for
+# committing. By checking the diffs ourselves, we can provide more information to the user
+# and avoid having them dig around in the logs for a problem.
+if test "$(git -C "$target_directory" diff --cached --raw)" == ""; then
+  warn "Git reports no changes."
+  warn
+  warn "Please check your plugin configuration in case you are ignoring something"
+  warn "that you shouldn't be."
+
+  # Next, ask for git status's porcelain output - this output is meant for parsing, which
+  # is what we'll be doing with it.
+  output="$(git -C "$target_directory" status --porcelain=v1 --ignored=traditional)"
+  untracked_count="$(grep -c "^?? " <<<"$output")" || true # ignore grep's return code
+  ignored_count="$(grep -c "^!! " <<<"$output")" || true
+
+  # Output an annotated warning
+  {
+    echo "This push resulted in an empty commit."
+    echo
+
+    if ((untracked_count + ignored_count)); then
+      if test "$untracked_count" -ne 0; then
+        echo "<details>"
+        echo "<summary>Untracked paths: $untracked_count</summary>"
+        grep "^?? " <<<"$output" | while read -r path; do
+          echo "  * ${path#?? }"
+        done
+        echo "</details>"
+        echo
+      fi
+
+      if test "$ignored_count" -ne 0; then
+        echo "<details>"
+        echo "<summary>Ignored paths: $ignored_count</summary>"
+        grep "^!! " <<<"$output" | while read -r path; do
+          echo "  * ${path#!! }"
+        done
+        echo "</details>"
+      fi
+    fi
+  } | buildkite-agent annotate --style=warning
+fi
+
+(
+  # Override git settings with env vars: these have higher precedence than the values
+  # stored in any level of git config. By using a subshell we can export the configuration
+  # while still ensuring we don't pollute anyone else's environment.
+  GIT_AUTHOR_NAME="$(git-user)"
+  export GIT_AUTHOR_NAME
+
+  GIT_AUTHOR_EMAIL="$(git-email)"
+  export GIT_AUTHOR_EMAIL
+
+  export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+  export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+
+  # Use --allow-empty to avoid failing the build after warning about no changes.
+  git -C "$target_directory" \
+    commit \
+    --allow-empty \
+    --quiet \
+    --message="$(git-commit-message)"
+)
+
+# As with the git clone, use a subshell to export the GIT_SSH_COMMAND without polluting
+# our own environment.
+(
+  if test -n "$ssh_command"; then
+    GIT_SSH_COMMAND="$ssh_command"
+    export GIT_SSH_COMMAND
+  fi
+
+  git -C "$target_directory" push
+)

@@ -1,0 +1,29 @@
+steps:
+  # - label: Lint
+  #   plugins:
+  #     - plugin-linter#v2.0.0:
+  #         id: forumone/artifact-push
+
+  - label: Shellcheck
+    plugins:
+      - shellcheck#v1.1.2:
+          files:
+            - hooks/**
+            - lib/**
+            - tests/**/*.bash
+
+  - label: Tests
+    plugins:
+      - docker-compose#v3.0.0:
+          run: tests
+
+  - label: Codespell
+    plugins:
+      - docker#v3.5.0:
+          image: python:3-slim
+          entrypoint: /bin/bash
+          command:
+            - -c
+            - |
+              pip install codespell
+              codespell hooks lib libexec
