@@ -2,6 +2,8 @@
 #
 # This file contains functions related to the SSH configuration and actions.
 
+shopt -s extglob
+
 # Usage:
 #   validate-ssh-config
 #
@@ -20,7 +22,7 @@ validate-ssh-config() {
   local failures=0
 
   local server
-  mapfile -d: server <<<"$keyscan"
+  IFS=: read -ra server <<<"$keyscan"
 
   case "${#server[@]}" in
   1)
@@ -30,10 +32,7 @@ validate-ssh-config() {
   2)
     # If there are two segments, then the second should be a numeric value. We validate
     # that here.
-    #
-    # NB. The %$'\n' trims a trailing newline - the <<< syntax adds one to mapfile's input
-    # so we have to remove it.
-    local port="${server[1]%$'\n'}"
+    local port="${server[1]}"
 
     if ! [[ "$port" =~ ^[0-9]+$ ]]; then
       error "The port '${port}' should be numeric."
@@ -65,19 +64,9 @@ ssh-keyscan-host() {
   fi
 
   local server
-  mapfile -d: server <<<"$keyscan"
+  IFS=: read -ra server <<<"$keyscan"
 
-  # Use %: (remove trailing colon) notation to strip the delimiter used when we invoked
-  # mapfile. If we didn't do this, then we would have the following issue: if we used
-  # this mapfile call:
-  #   mapfile -d: array <<<"foo:bar"
-  # then we would have the following in the array variable:
-  #   array=("foo:" "bar")
-  #
-  # The quickest way to fix it is just by having bash remove the offending delimiter. It
-  # is not a substitution failure if the delimiter is not found, so we don't have to worry
-  # about the case where the server variable only has one element.
-  echo -n "${server[0]%:}"
+  echo -n "${server[0]}"
 }
 
 # Usage:
@@ -95,11 +84,10 @@ ssh-keyscan-port() {
   fi
 
   local server
-  mapfile -d: server <<<"$keyscan"
+  IFS=: read -ra server <<<"$keyscan"
 
   if test "${#server[@]}" -gt 1; then
-    # See the comments in validate-ssh-config as to why the %$'\n' is needed.
-    echo -n "${server[1]%$'\n'}"
+    echo -n "${server[1]}"
   fi
 
   # If we've reached this point, then we assume the user only wrote keyscan: HOST in their
