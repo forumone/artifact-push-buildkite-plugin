@@ -36,13 +36,13 @@ validate-ssh-config() {
     local port="${server[1]%$'\n'}"
 
     if ! [[ "$port" =~ ^[0-9]+$ ]]; then
-      error "The port ${port@Q} should be numeric."
+      error "The port '${port}' should be numeric."
       failures=$((failures + 1))
     fi
     ;;
 
   *)
-    error "The keyscan option ${keyscan@Q} should be in HOST or HOST:PORT format."
+    error "The keyscan option '${keyscan}' should be in HOST or HOST:PORT format."
     failures=$((failures + 1))
     ;;
   esac

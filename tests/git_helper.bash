@@ -25,7 +25,7 @@ git_init() {
       ;;
 
     --*)
-      echo "Unrecognized option ${arg@Q} passed to git_init" |
+      echo "Unrecognized option '${arg}' passed to git_init" |
         batslib_decorate "ERROR: git_init" |
         fail
       return $?
@@ -185,7 +185,7 @@ git_commit() {
       ;;
 
     --*)
-      echo "Unrecognized option ${1@Q} passed to git_commit" |
+      echo "Unrecognized option '${1}' passed to git_commit" |
         batslib_decorate "ERROR: git_commit" |
         fail
       return $?
