@@ -165,7 +165,7 @@ build-branch-config() {
 
     # If using longhand notation, the "target" option is required.
     if test -n "$match" && test -z "$target"; then
-      error "The branch ${match@Q} has no target to deploy to."
+      error "The branch '${match}' has no target to deploy to."
       error
       error "In the branch mapping array, the target option specifies which branch to"
       error "deploy to on the remote repository. This can be used to match another"
@@ -181,7 +181,7 @@ build-branch-config() {
       existing_target="$(branch-get-option "$match" target)"
       existing_remote="$(branch-get-option "$match" remote)"
 
-      error "The branch ${match@Q} already has a deployment target of ${existing_target}"
+      error "The branch '${match}' already has a deployment target of ${existing_target}"
       if test -n "$existing_remote"; then
         error "(The branch is published to ${existing_remote})"
       fi

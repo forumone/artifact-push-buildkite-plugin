@@ -98,7 +98,7 @@ while true; do
   index=$((index + 1))
 done
 
-header "Deploying to ${target_branch@Q} on remote ${target_remote@Q}..."
+header "Deploying to '${target_branch}' on remote '${target_remote}'..."
 
 # If the user requested an ssh-keyscan, then we perform that and save the new host keys to
 # a temporary file.
