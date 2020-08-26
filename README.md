@@ -18,7 +18,7 @@ This is the simplest use of the plugin. Whenever the `master` branch is built, i
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: .
           remote: git@example.com/remote.git
           branches:
@@ -32,7 +32,7 @@ There is a long-hand form that can be used to change this mapping logic. For exa
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: services/drupal/web
           remote: git@example.com/remote.git
           branches:
@@ -45,7 +45,7 @@ Finally, the remote can be changed on a per-branch basis in case there is a sepa
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: services/drupal/web
           remote: git@example.com/remote/development.git
           branches:
@@ -61,7 +61,7 @@ If you need to perform an SSH keyscan to obtain `known_hosts` keys, use the `key
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: services/drupal/web
           remote: git@example.com/remote.git
           branches:
@@ -77,7 +77,7 @@ When working with a source project, you generally will need to override your pro
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: .
           remote: git@example.com/remote.git
           branches:
@@ -94,7 +94,7 @@ Similarly, if the remote tracks files that your project ignores, use the `ignore
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: .
           remote: git@example.com/remote.git
           branches:
@@ -110,7 +110,7 @@ The Git behavior can be overridden. The plugin accepts options to override the G
 ```yaml
 steps:
   - plugins:
-      - forumone/artifact-push#v0.1.0:
+      - forumone/artifact-push#v0.1.1:
           source-directory: .
           remote: git@example.com/remote.git
           branches:
