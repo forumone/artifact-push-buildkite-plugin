@@ -24,9 +24,10 @@ validate-ssh-config() {
   local server
   IFS=: read -ra server <<<"$keyscan"
 
+  # Validate the number of required arguments (and that the port is numeric)
   case "${#server[@]}" in
   1)
-    # If we only received the host, then do nothing - we assume any host name is valid.
+    # Nothing special to do in this case (but see below)
     ;;
 
   2)
@@ -45,6 +46,20 @@ validate-ssh-config() {
     failures=$((failures + 1))
     ;;
   esac
+
+  # Does the configuration have an empty server? (If we have reached here, then the
+  # configuration is something like ":42", which won't be usable in keyscanning.)
+  if test -z "${server[0]}"; then
+    error "The server name cannot be empty"
+    failures=$((failures + 1))
+  fi
+
+  # Does the configuration have a username? This will fail (ssh-keyscan needs a bare
+  # domain name), so fail early before any downstream issues with keyscan are encountered.
+  if [[ "${server[0]}" = *@* ]]; then
+    error "The keyscan configuration should not contain a user name"
+    failures=$((failures + 1))
+  fi
 
   [ "$failures" -eq 0 ]
 }
@@ -125,4 +140,5 @@ ssh-perform-keyscan() {
 
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"
+  return $?
 }

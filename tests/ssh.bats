@@ -27,11 +27,38 @@ teardown() {
   assert_test_success
 }
 
+@test "validate-ssh-config: keyscan=USER@HOST" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=user@example.org
+
+  run validate-ssh-config
+
+  assert_failure
+  assert_line --partial "should not contain a user name"
+}
+
 @test "validate-ssh-config: keyscan=HOST:PORT" {
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=example.org:123
 
   run validate-ssh-config
   assert_test_success
+}
+
+@test "validate-ssh-config: keyscan=USER@HOST:PORT" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=user@example.org:123
+
+  run validate-ssh-config
+
+  assert_failure
+  assert_line --partial "should not contain a user name"
+}
+
+@test "validate-ssh-config: keyscan=:PORT" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=:123
+
+  run validate-ssh-config
+
+  assert_failure
+  assert_line --partial "server name cannot be empty"
 }
 
 @test "validate-ssh-config: keyscan=HOST:PORT (port invalid)" {
@@ -124,6 +151,20 @@ teardown() {
   assert_output --partial "example.org:123..."
 
   assert_contents_of_file "$TEST_TMP_DIR/known_hosts" "HOST+PORT KEY"
+
+  unstub ssh-keyscan
+}
+
+@test "ssh-perform-keyscan (ssh-keyscan failure)" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=domain.invalid
+
+  stub ssh-keyscan \
+    'domain.invalid : echo "getaddrinfo: domain.invalid: Name or service not known" >/dev/stderr; exit 1'
+
+  run ssh-perform-keyscan "$TEST_TMP_DIR/known_hosts"
+
+  assert_failure
+  assert_output --partial "Name or service not known"
 
   unstub ssh-keyscan
 }
