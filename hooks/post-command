@@ -110,20 +110,27 @@ fi
 # Create a temporary directory
 target_directory="$(mktemp -d "$template")"
 
+# Force StrictHostKeyChecking to 'yes'. Most systems have 'ask' as the default, which will
+# cause Buildkite to wait forever on terminal input that won't come. In addition to
+# validating configuration and failing if ssh-keyscan fails, we use this as a final
+# backstop in case we don't have a copy of the remote's public key.
+ssh_command="ssh -o StrictHostKeyChecking=yes"
+
 # If we were asked to perform a keyscan, then save an ssh command that we should provide
 # to Git when cloning/pushing. Remember to use subshells when passing the ssh_command to
 # Git because we don't want to interfere with Buildkite.
-ssh_command=
 if test -n "$known_hosts_file"; then
-  ssh_command="ssh -o UserKnownHostsFile=$known_hosts_file"
+  ssh_command="$ssh_command UserKnownHostsFile=$known_hosts_file"
 fi
 
 (
   echo "--- :git: Cloning $target_remote..."
-  if test -n "$ssh_command"; then
-    GIT_SSH_COMMAND="$ssh_command"
-    export GIT_SSH_COMMAND
-  fi
+
+  # Provide the GIT_SSH_COMMAND export in a subshell to avoid overriding the agent's.
+  # (The disable directive below asserts to Shellcheck that we know what we're doing with
+  # respect to deliberately losing the environment modification.)
+  # shellcheck disable=SC2030
+  export GIT_SSH_COMMAND="$ssh_command"
 
   git clone \
     --branch "$target_branch" \
@@ -267,10 +274,9 @@ fi
 # As with the git clone, use a subshell to export the GIT_SSH_COMMAND without polluting
 # our own environment.
 (
-  if test -n "$ssh_command"; then
-    GIT_SSH_COMMAND="$ssh_command"
-    export GIT_SSH_COMMAND
-  fi
+  # Same as last time - this subshell modification is intentional.
+  # shellcheck disable=SC2031
+  export GIT_SSH_COMMAND="$ssh_command"
 
   git -C "$target_directory" push
 )
