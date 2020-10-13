@@ -27,11 +27,38 @@ teardown() {
   assert_test_success
 }
 
+@test "validate-ssh-config: keyscan=USER@HOST" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=user@example.org
+
+  run validate-ssh-config
+
+  assert_failure
+  assert_line --partial "should not contain a user name"
+}
+
 @test "validate-ssh-config: keyscan=HOST:PORT" {
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=example.org:123
 
   run validate-ssh-config
   assert_test_success
+}
+
+@test "validate-ssh-config: keyscan=USER@HOST:PORT" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=user@example.org:123
+
+  run validate-ssh-config
+
+  assert_failure
+  assert_line --partial "should not contain a user name"
+}
+
+@test "validate-ssh-config: keyscan=:PORT" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=:123
+
+  run validate-ssh-config
+
+  assert_failure
+  assert_line --partial "server name cannot be empty"
 }
 
 @test "validate-ssh-config: keyscan=HOST:PORT (port invalid)" {
