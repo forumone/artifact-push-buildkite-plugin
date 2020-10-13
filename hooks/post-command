@@ -120,7 +120,7 @@ ssh_command="ssh -o StrictHostKeyChecking=yes"
 # to Git when cloning/pushing. Remember to use subshells when passing the ssh_command to
 # Git because we don't want to interfere with Buildkite.
 if test -n "$known_hosts_file"; then
-  ssh_command="$ssh_command UserKnownHostsFile=$known_hosts_file"
+  ssh_command="$ssh_command -o UserKnownHostsFile=$known_hosts_file"
 fi
 
 (
