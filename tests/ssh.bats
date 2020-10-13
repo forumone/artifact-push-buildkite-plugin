@@ -127,3 +127,17 @@ teardown() {
 
   unstub ssh-keyscan
 }
+
+@test "ssh-perform-keyscan (ssh-keyscan failure)" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SSH_KEYSCAN=domain.invalid
+
+  stub ssh-keyscan \
+    'domain.invalid : echo "getaddrinfo: domain.invalid: Name or service not known" >/dev/stderr; exit 1'
+
+  run ssh-perform-keyscan "$TEST_TMP_DIR/known_hosts"
+
+  assert_failure
+  assert_output --partial "Name or service not known"
+
+  unstub ssh-keyscan
+}
