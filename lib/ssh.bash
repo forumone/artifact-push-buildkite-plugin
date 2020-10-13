@@ -125,4 +125,5 @@ ssh-perform-keyscan() {
 
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"
+  return $?
 }
