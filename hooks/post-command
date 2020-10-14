@@ -124,7 +124,7 @@ if test -n "$known_hosts_file"; then
 fi
 
 (
-  echo "--- :git: Cloning $target_remote..."
+  verbose "Cloning git repository"
 
   # Provide the GIT_SSH_COMMAND export in a subshell to avoid overriding the agent's.
   # (The disable directive below asserts to Shellcheck that we know what we're doing with
@@ -190,17 +190,20 @@ done
 # The "&& pwd" at the end lets us wind up with a more normalized path (e.g. /foo/. => /foo)
 source_directory="$(cd "$PWD/$(get-config source-directory)" && pwd)"
 
-verbose "rsync"
-verbose "  source: $source_directory"
-verbose "  target: $target_directory"
-
+verbose "Performing rsync from $source_directory to $target_directory"
 rsync "${rsync_args[@]}" "$source_directory/" "$target_directory/"
+
+verbose "Performing git add ."
 
 # Add changed files. The -C "$dir" option is used to tell Git which directory to look in,
 # instead of attempting to find where .git is relative to $PWD. This lets us avoid
 # performing a cd and potentially changing what other plugins think is the current
 # directory.
 git -C "$target_directory" add .
+
+if test ${#files_force_add[@]} -gt 0; then
+  verbose "Force-adding ${#files_force_add[@]} files/directories"
+fi
 
 # Obey the force-add list
 for file in ${files_force_add[@]:+"${files_force_add[@]}"}; do
@@ -250,6 +253,8 @@ if test "$(git -C "$target_directory" diff --cached --raw)" == ""; then
   } | buildkite-agent annotate --style=warning
 fi
 
+verbose "Performing a git commit"
+
 (
   # Override git settings with env vars: these have higher precedence than the values
   # stored in any level of git config. By using a subshell we can export the configuration
@@ -270,6 +275,8 @@ fi
     --quiet \
     --message="$(git-commit-message)"
 )
+
+verbose "Pushing commit"
 
 # As with the git clone, use a subshell to export the GIT_SSH_COMMAND without polluting
 # our own environment.
