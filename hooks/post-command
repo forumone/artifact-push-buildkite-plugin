@@ -273,11 +273,18 @@ verbose "Performing a git commit"
   export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
   export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
 
+  # If the user didn't specify verbose, add the --quiet flag
+  if is-verbose; then
+    quiet=
+  else
+    quiet=--quiet
+  fi
+
   # Use --allow-empty to avoid failing the build after warning about no changes.
   git -C "$target_directory" \
     commit \
+    $quiet \
     --allow-empty \
-    --quiet \
     --message="$(git-commit-message)"
 )
 
