@@ -12,7 +12,7 @@ validate-git-config() {
   local failures=0
 
   local user
-  user="$(get-config git user)"
+  user="$(get-config git name)"
   if test -z "$user" && ! git config user.name >/dev/null 2>/dev/null; then
     error "No Git user found."
     error "Ensure that either the 'name' key is set in the Git configuration, or that"
@@ -41,7 +41,7 @@ validate-git-config() {
 # git config.
 git-user() {
   local config
-  config="$(get-config git user)"
+  config="$(get-config git name)"
 
   if test -n "$config"; then
     echo -n "$config"
