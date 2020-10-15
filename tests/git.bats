@@ -46,7 +46,7 @@ load "../lib/git"
 }
 
 @test "validate-git-config (explicit name; system email)" {
-  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_USER='Config User'
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME='Config User'
 
   stub git \
     'config user.email : echo Config User'
@@ -59,7 +59,7 @@ load "../lib/git"
 }
 
 @test "validate-git-config (explicit name; explicit email)" {
-  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_USER='Config User'
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME='Config User'
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_EMAIL='config@example.com'
 
   run validate-git-config
@@ -68,7 +68,7 @@ load "../lib/git"
 }
 
 @test "validate-git-config (explicit name; missing email)" {
-  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_USER='Config User'
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME='Config User'
 
   stub git \
     'config user.email : exit 1'
@@ -126,7 +126,7 @@ load "../lib/git"
 }
 
 @test "git-user (config)" {
-  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_USER='Config User'
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME='Config User'
 
   run git-user
 
