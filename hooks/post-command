@@ -253,6 +253,11 @@ if test "$(git -C "$target_directory" diff --cached --raw)" == ""; then
   } | buildkite-agent annotate --style=warning
 fi
 
+if is-verbose; then
+  verbose "Summary of changes:"
+  git -C "$target_directory" diff --compact-summary
+fi
+
 verbose "Performing a git commit"
 
 (
