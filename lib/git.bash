@@ -5,9 +5,32 @@
 # Usage:
 #   validate-git-config
 #
-# At present, this function does nothing and always succeeds.
+# This function validates that, for the git user and email configuration, either:
+# 1. Explicit configuration is present, or
+# 2. `git config` returns a non-zero exit code when retrieving the value.
 validate-git-config() {
-  true
+  local failures=0
+
+  local user
+  user="$(get-config git name)"
+  if test -z "$user" && ! git config user.name >/dev/null 2>/dev/null; then
+    error "No Git user found."
+    error "Ensure that either the 'name' key is set in the Git configuration, or that"
+    error "'git config user.name' is set."
+
+    failures=$((failures + 1))
+  fi
+
+  local email
+  email="$(get-config git email)"
+  if test -z "$email" && ! git config user.email >/dev/null 2>/dev/null; then
+    error "No Git email found."
+    error "Ensure that either the 'email' key is set in the Git configuration, or that"
+    error "'git config user.email' is set."
+    failures=$((failures + 1))
+  fi
+
+  [ "$failures" -eq 0 ]
 }
 
 # Usage:
@@ -18,7 +41,7 @@ validate-git-config() {
 # git config.
 git-user() {
   local config
-  config="$(get-config git user)"
+  config="$(get-config git name)"
 
   if test -n "$config"; then
     echo -n "$config"
