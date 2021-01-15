@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# In most cases, the artifact push plugin is performing the main operation for the
+# deployment command step, so there isn't typically a sensible entry for the
+# `command` key. The functionality of this plugin needs to run later in the
+# lifecycle, however, in order to ensure other plugins, most commonly
+# `forumone/extract`, have a chance to make all of the preparations beforehand.
+#
+# To support this, a placeholder command step needs to be present to allow for
+# more intuitive configuration that does not include a `command` key.
+
+# 'eval ""' is allowed and does nothing: this means we don't need to provide any defaults.
+eval "$BUILDKITE_COMMAND"
