@@ -4,6 +4,13 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# debugging rsync
+whoami
+
+apt install -y rsync openssh-client
+
+# end debugging rsync
+
 # shellcheck source=lib/lib.bash
 . "$root/lib/lib.bash"
 

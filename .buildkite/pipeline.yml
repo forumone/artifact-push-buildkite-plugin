@@ -28,4 +28,5 @@ steps:
               apt update
               apt install -y rsync openssh-client make gcc musl-dev git
               pip install codespell
+              rsync --version
               codespell hooks lib libexec
