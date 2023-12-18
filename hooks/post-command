@@ -1,14 +1,10 @@
 #!/bin/bash
 
+cat /etc/os-release
+
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-# debugging rsync
-
-apt install -y rsync openssh-client
-
-# end debugging rsync
 
 # shellcheck source=lib/lib.bash
 . "$root/lib/lib.bash"
@@ -201,7 +197,7 @@ verbose "  source: $source_directory"
 verbose "  target: $target_directory"
 
 
-rsync "${rsync_args[@]}" "$source_directory/" "$target_directory/"
+/usr/bin/rsync "${rsync_args[@]}" "$source_directory/" "$target_directory/"
 
 # Add changed files. The -C "$dir" option is used to tell Git which directory to look in,
 # instead of attempting to find where .git is relative to $PWD. This lets us avoid
