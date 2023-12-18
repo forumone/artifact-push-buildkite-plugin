@@ -25,5 +25,7 @@ steps:
           command:
             - -c
             - |
+              apt update
+              apt install -y rsync openssh-client make gcc musl-dev git
               pip install codespell
               codespell hooks lib libexec
