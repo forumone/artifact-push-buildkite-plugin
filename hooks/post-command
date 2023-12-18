@@ -5,9 +5,8 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # debugging rsync
-whoami
 
-apk add --no-cache rsync openssh-client
+apt install -y rsync openssh-client
 
 # end debugging rsync
 
