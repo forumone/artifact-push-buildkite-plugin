@@ -2,10 +2,11 @@
 
 set -euo pipefail
 
-whomai
+whoami
 
 dnf install -y openssh-clients rsync
 
+rsync --version
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # shellcheck source=lib/lib.bash
