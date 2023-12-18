@@ -194,6 +194,8 @@ verbose "rsync"
 verbose "  source: $source_directory"
 verbose "  target: $target_directory"
 
+rsync --version
+
 rsync "${rsync_args[@]}" "$source_directory/" "$target_directory/"
 
 # Add changed files. The -C "$dir" option is used to tell Git which directory to look in,
