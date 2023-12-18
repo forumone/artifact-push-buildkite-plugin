@@ -190,11 +190,10 @@ done
 # The "&& pwd" at the end lets us wind up with a more normalized path (e.g. /foo/. => /foo)
 source_directory="$(cd "$PWD/$(get-config source-directory)" && pwd)"
 
-verbose "rsync"
+verbose "rsync source target"
 verbose "  source: $source_directory"
 verbose "  target: $target_directory"
 
-rsync --version
 
 rsync "${rsync_args[@]}" "$source_directory/" "$target_directory/"
 
