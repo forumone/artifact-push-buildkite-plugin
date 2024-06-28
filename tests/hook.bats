@@ -95,6 +95,7 @@ teardown() {
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_REMOTE="file://$REMOTE_REPO"
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SOURCE_DIRECTORY=.
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_MATCH=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TARGET=master
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TAG='release-$BUILDKITE_BUILD_NUMBER'
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME=bats
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_EMAIL=bats@localhost.localdomain
@@ -127,7 +128,7 @@ teardown() {
   assert_success
   assert_output "release-123"
 
-  assert_contents_of_file "$REMOTE_REPO/refs/heads/release-123" "$head"
+  assert_contents_of_file "$REMOTE_REPO/refs/tags/release-123" "$head"
 
   unstub buildkite-agent
 }
@@ -285,6 +286,7 @@ teardown() {
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_REMOTE="file://$REMOTE_REPO"
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SOURCE_DIRECTORY=.
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_MATCH=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TARGET=master
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TAG='release-$BUILDKITE_BUILD_NUMBER'
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME=bats
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_EMAIL=bats@localhost.localdomain
@@ -339,9 +341,6 @@ teardown() {
 
 
 @test "hook: simple sync from root (with timestamp tag)" {
-  stub date \
-    +%F : 'echo 1234-56-78'
-
   plugin="$PWD"
 
   # Git log format: commit hash (%H) followed by commit message (%s)
@@ -364,7 +363,8 @@ teardown() {
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_REMOTE="file://$REMOTE_REPO"
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_SOURCE_DIRECTORY=.
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_MATCH=master
-  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TAG='release-$(date +%F)'
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TARGET=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TAG='release-$(echo 1234-56-78)'
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_NAME=bats
   export BUILDKITE_PLUGIN_ARTIFACT_PUSH_GIT_EMAIL=bats@localhost.localdomain
 
@@ -413,8 +413,6 @@ teardown() {
 
   head="$(cat "$REMOTE_REPO/refs/heads/master")"
   assert_contents_of_file "$REMOTE_REPO/refs/tags/release-1234-56-78" "$head"
-
-  unstub date
 }
 
 @test "hook: simple sync from nested" {
