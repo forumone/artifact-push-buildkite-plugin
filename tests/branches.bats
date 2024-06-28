@@ -193,3 +193,53 @@ load "../lib/branches"
 
   assert_equal "$(get-branch-remote)" "example.com"
 }
+
+@test "get-branch-tag (shorthand)" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1=stable
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_REMOTE=example.org
+  export BUILDKITE_BRANCH=master
+
+  build-branch-config
+
+  assert_equal "$(get-branch-tag)" ""
+}
+
+@test "get-branch-tag (longhand; no tag)" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_MATCH=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TARGET=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_MATCH=stable
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_TARGET=stable
+  export BUILDKITE_BRANCH=master
+
+  build-branch-config
+
+  assert_equal "$(get-branch-tag)" ""
+}
+
+@test "get-branch-tag (longhand; no match)" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_MATCH=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TARGET=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_MATCH=stable
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_TARGET=stable
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_TAG='release-$BUILDKITE_BUILD_NUMBER'
+  export BUILDKITE_BRANCH=master
+
+  build-branch-config
+
+  assert_equal "$(get-branch-tag)" ""
+}
+
+@test "get-branch-tag (longhand; match)" {
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_MATCH=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TARGET=master
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_0_TAG='release-$BUILDKITE_BUILD_NUMBER'
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_MATCH=stable
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_TARGET=stable
+  export BUILDKITE_PLUGIN_ARTIFACT_PUSH_BRANCHES_1_TAG='deploy-$BUILDKITE_BUILD_NUMBER'
+  export BUILDKITE_BRANCH=master
+
+  build-branch-config
+
+  assert_equal "$(get-branch-tag)" 'release-$BUILDKITE_BUILD_NUMBER'
+}
