@@ -40,7 +40,7 @@ steps:
               target: develop # remote branch
 ```
 
-Finally, the remote can be changed on a per-branch basis in case there is a separate remote repository needed. This is the case with, for example, WP Engine's hosting environment.
+The remote can be changed on a per-branch basis in case there is a separate remote repository needed. This is the case with, for example, WP Engine's hosting environment.
 
 ```yaml
 steps:
@@ -54,6 +54,24 @@ steps:
             - match: stable
               target: master
               remote: git@example.com/remote/staging.git
+```
+
+Finally, the plugin supports a `tag:` field to dynamically create a tag. Since it goes through bash's `eval` mechanism, attention should be paid to Buildkite's [environment variable](https://buildkite.com/docs/pipelines/environment-variables#runtime-variable-interpolation) expansion if you want the agent doing the push to expand it, instead of at pipeline upload time.
+
+```yaml
+steps:
+  - plugins:
+      - forumone/artifact-push#v0.3.1:
+          source-directory: services/drupal/web
+          remote: git@example.com/remote.git
+          branches:
+            - master # No tags here
+            - match: stable
+              target: stable
+              tag: development-$(date +%F) # Use `date` to create a timestamped release tag
+            - match: live
+              target: live
+              tag: release-$BUILDKITE_BRANCH-$BUILDKITE_BUILD_NUMBER # The hook will see "release-live-1234"
 ```
 
 If you need to perform an SSH keyscan to obtain `known_hosts` keys, use the `keyscan` option. This is useful if you are using ephemeral agents and/or are pushing to trusted hosts.
