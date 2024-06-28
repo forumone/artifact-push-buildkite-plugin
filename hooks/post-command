@@ -72,6 +72,13 @@ if test -z "$target_branch"; then
   exit 1
 fi
 
+# Get the tag from the configuration and evaluate the expression, if need be
+tag_expr="$(get-branch-tag)"
+tag=
+if test -n "$tag_expr"; then
+  tag="$(eval echo "$tag_expr")"
+fi
+
 # Build the two file lists
 files_ignore=()
 files_force_add=()
@@ -269,6 +276,10 @@ fi
     --allow-empty \
     --quiet \
     --message="$(git-commit-message)"
+
+  if test -n "$tag"; then
+    git -C "$target_directory" tag -- "$tag"
+  fi
 )
 
 # As with the git clone, use a subshell to export the GIT_SSH_COMMAND without polluting
@@ -278,5 +289,11 @@ fi
   # shellcheck disable=SC2031
   export GIT_SSH_COMMAND="$ssh_command"
 
-  git -C "$target_directory" push
+  args=("heads/$target_branch")
+
+  if test -n "$tag"; then
+    args+=("tags/$tag")
+  fi
+
+  git -C "$target_directory" push origin "${args[@]}"
 )
