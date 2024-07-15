@@ -27,6 +27,7 @@ configuration:
           match: { type: string }
           target: { type: string }
           remote: { type: string }
+          tag: { type: string }
 
     files:
       additionalProperties: false

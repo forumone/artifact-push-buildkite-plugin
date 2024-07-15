@@ -43,28 +43,31 @@ branch-config-count() {
 }
 
 # Usage:
-#   branch-set-config BRANCH TARGET REMOTE
+#   branch-set-config BRANCH TARGET REMOTE [TAG]
 #
 # BRANCH: The name of a branch to set the configuration for.
 # TARGET: The target branch to deploy to.
 # REMOTE: The remote repository to push to.
+# TAG (optional): The Bash expression to use for tagging
 #
 # This function sets the configuration (target + remote) for the branch named by BRANCH.
 # Note that both TARGET and REMOTE are required; it is up to callers of this function to
 # follow the conventions documented in this plugin's README.
 branch-set-config() {
   # shellcheck disable=SC2016
-  local filter='.[$branch] = { $target, $remote }'
+  local filter='.[$branch] = { $target, $remote, $tag }'
 
   local branch="$1"
   local target="$2"
   local remote="$3"
+  local tag="${4:-}"
 
   _branches="$(
     jq -c "$filter" \
       --arg branch "$branch" \
       --arg target "$target" \
       --arg remote "$remote" \
+      --arg tag "$tag" \
       <<<"$_branches"
   )"
 }
@@ -73,7 +76,7 @@ branch-set-config() {
 #   branch-get-option BRANCH OPTION
 #
 # BRANCH: The name of the branch to get configuration from.
-# OPTION: The name of a configuration option. Must be one of 'target' or 'remote'.
+# OPTION: The name of a configuration option. Must be one of 'target', 'remote', or 'tag'.
 #
 # This function reads the configuration for the branch named by BRANCH, and returns a
 # single option from it. Unlike branch-get-option, this function returns "raw" strings:
@@ -115,6 +118,7 @@ build-branch-config() {
   local match
   local remote
   local target
+  local tag
 
   # Used in error reporting
   local existing_target
@@ -130,6 +134,7 @@ build-branch-config() {
     match="$(get-config branches $index match)"
     target="$(get-config branches $index target)"
     remote="$(get-config branches $index remote)"
+    tag="$(get-config branches $index tag)"
 
     # We assume that any non-existed configuration is the end of the array
     if test -z "$shorthand" && test -z "$match" && test -z "$target" && test -z "$remote"; then
@@ -194,7 +199,7 @@ build-branch-config() {
     fi
 
     if test -n "$safe"; then
-      branch-set-config "$match" "$target" "$remote"
+      branch-set-config "$match" "$target" "$remote" "$tag"
     fi
 
     index=$((index + 1))
@@ -233,6 +238,17 @@ get-branch-target() {
 # NB. This function must be run after build-branch-config has been called.
 get-branch-remote() {
   branch-get-option "$BUILDKITE_BRANCH" remote
+}
+
+# Usage:
+#   get-branch-tag
+#
+# This determines the tag to apply to this push, based on the value of
+# $BUILDKITE_BRANCH.
+#
+# NB. This function must be run after build-branch-config has been called.
+get-branch-tag() {
+  branch-get-option "$BUILDKITE_BRANCH" tag
 }
 
 # Usage:
