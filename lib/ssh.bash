@@ -152,6 +152,8 @@ ssh-perform-keyscan() {
   echo "$file"
   # Tesing: Remove Me Later
   echo "$port"
+  # Tesing: Remove Me Later
+  echo "${args[@]}"
 
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"
