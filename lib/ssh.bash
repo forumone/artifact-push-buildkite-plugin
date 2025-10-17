@@ -122,6 +122,8 @@ ssh-perform-keyscan() {
   host="$(ssh-keyscan-host)"
   
   # Tesing: Remove Me Later
+  echo "Echoing Host"
+  # Tesing: Remove Me Later
   echo "$host"
 
   local port
@@ -143,11 +145,13 @@ ssh-perform-keyscan() {
   local sep="${port:+:}"
 
   # Tesing: Remove Me Later
+  echo "Begin variable echos"
+  # Tesing: Remove Me Later
   echo "$host$sep$port"
   # Tesing: Remove Me Later
   echo "$file"
   # Tesing: Remove Me Later
-  echo "$ssh-keyscan-port"
+  echo "$port"
 
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"
