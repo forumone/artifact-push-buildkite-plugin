@@ -11,9 +11,4 @@
 
 # 'eval ""' is allowed and does nothing: this means we don't need to provide any defaults.
 
-# Tesing: Remove Me Later
-echo "Starting Debugging Tests"
-# Tesing: Remove Me Later
-echo "$BUILDKITE_COMMAND"
-
 eval "$BUILDKITE_COMMAND"

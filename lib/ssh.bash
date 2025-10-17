@@ -118,13 +118,13 @@ ssh-keyscan-port() {
 # order to avoid polluting the agent's SSH known_hosts.
 ssh-perform-keyscan() {
   # Tesing: Remove Me Later
-  echo "$(ssh-keyscan-host)"
+  echo "$ssh-keyscan-host"
 
   local host
   host="$(ssh-keyscan-host)"
   
   # Tesing: Remove Me Later
-  echo "$(ssh-keyscan-port)"
+  echo "$ssh-keyscan-port"
 
   local port
   port="$(ssh-keyscan-port)"
@@ -149,7 +149,7 @@ ssh-perform-keyscan() {
   # Tesing: Remove Me Later
   echo "$file"
   # Tesing: Remove Me Later
-  echo "${args[@]}"
+  echo "$ssh-keyscan-port"
 
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"
