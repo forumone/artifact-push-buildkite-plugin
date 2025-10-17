@@ -117,8 +117,14 @@ ssh-keyscan-port() {
 # Performs an SSH keyscan using the plugin configuration. Keys are written to FILE in
 # order to avoid polluting the agent's SSH known_hosts.
 ssh-perform-keyscan() {
+
   local host
   host="$(ssh-keyscan-host)"
+  
+  # Tesing: Remove Me Later
+  echo "Echoing Host"
+  # Tesing: Remove Me Later
+  echo "$host"
 
   local port
   port="$(ssh-keyscan-port)"
@@ -137,6 +143,15 @@ ssh-perform-keyscan() {
 
   # $sep is ":" if $port is non-empty, and "" otherwise
   local sep="${port:+:}"
+
+  # Tesing: Remove Me Later
+  echo "Begin variable echos"
+  # Tesing: Remove Me Later
+  echo "$host$sep$port"
+  # Tesing: Remove Me Later
+  echo "$file"
+  # Tesing: Remove Me Later
+  echo "$port"
 
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"

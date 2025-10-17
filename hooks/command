@@ -10,4 +10,5 @@
 # more intuitive configuration that does not include a `command` key.
 
 # 'eval ""' is allowed and does nothing: this means we don't need to provide any defaults.
+
 eval "$BUILDKITE_COMMAND"
