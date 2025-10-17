@@ -131,7 +131,10 @@ if test -n "$known_hosts_file"; then
   echo "Assigned known host file:"
   # Tesing: Remove Me Later
   echo "$known_hosts_file"
-  ssh_command="$ssh_command -o UserKnownHostsFile=$known_hosts_file"
+  # Tesing: Remove Me Later
+  cat $known_hosts_file
+  # TESTING SPECIAL: Remove the -v Later
+  ssh_command="$ssh_command -v -o UserKnownHostsFile=$known_hosts_file"
 fi
 
 (
