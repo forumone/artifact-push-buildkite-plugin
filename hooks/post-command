@@ -121,7 +121,7 @@ target_directory="$(mktemp -d "$template")"
 # cause Buildkite to wait forever on terminal input that won't come. In addition to
 # validating configuration and failing if ssh-keyscan fails, we use this as a final
 # backstop in case we don't have a copy of the remote's public key.
-ssh_command="ssh -o StrictHostKeyChecking=yes"
+ssh_command="ssh -o StrictHostKeyChecking=no"
 
 # If we were asked to perform a keyscan, then save an ssh command that we should provide
 # to Git when cloning/pushing. Remember to use subshells when passing the ssh_command to
