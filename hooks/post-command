@@ -23,7 +23,7 @@ if test "$status" -ne 0; then
 fi
 
 # Template for temporary files
-template="${TMPDIR:-/tmp}/$BUILDKITE_PIPELINE_SLUG-$BUILDKITE_BUILD_NUMBER.XXXXXXXX"
+template="${TMPDIR:-/var/tmp}/$BUILDKITE_PIPELINE_SLUG-$BUILDKITE_BUILD_NUMBER.XXXXXXXX"
 
 # Set up the cleanup trap now in order to ensure things get destroyed even if we fail
 target_directory=
