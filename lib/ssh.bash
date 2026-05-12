@@ -144,17 +144,6 @@ ssh-perform-keyscan() {
   # $sep is ":" if $port is non-empty, and "" otherwise
   local sep="${port:+:}"
 
-  # Tesing: Remove Me Later
-  echo "Begin variable echos"
-  # Tesing: Remove Me Later
-  echo "$host$sep$port"
-  # Tesing: Remove Me Later
-  echo "$file"
-  # Tesing: Remove Me Later
-  echo "$port"
-  # Tesing: Remove Me Later
-  echo "${args[@]}"
-
   header "Retrieving keys from $host$sep$port..."
   ssh-keyscan "${args[@]}" >"$file"
   return $?
